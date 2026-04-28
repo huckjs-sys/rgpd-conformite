@@ -251,7 +251,68 @@ rgpd-conformite/
         └── fr_FR/LC_MESSAGES/rgpd-conformite.mo
 ```
 
-## 8. Risks and open questions
+## 8. Upstream compliance checklist
+
+Every item below is enforced by the upstream README at
+[`src/plugins/README.md`](https://github.com/ChurchCRM/CRM/blob/master/src/plugins/README.md)
+and `PluginInstaller`. This plan must respect all of them — violations cause the URL installer to refuse the zip or the security scan to fail review.
+
+### Directory layout (strict)
+
+- `plugin.json` at the plugin root (single source of truth for `id`, `version`, `type: "community"`, `mainClass`).
+- Main class at `src/{PluginClass}Plugin.php` extending `AbstractPlugin`.
+- `routes/routes.php` (single file, optional).
+- `views/*.php` (optional).
+- `locale/textdomain/{locale}/LC_MESSAGES/rgpd-conformite.mo` (PHP gettext).
+- `locale/i18n/{locale}.json` (JS i18next, flat `key → string` only — nested JSON is silently dropped).
+- **Exactly one** top-level directory inside the release zip, named `rgpd-conformite/`.
+
+### Allowed file extensions in the release zip
+
+Only: `.php`, `.js`, `.json`, `.css`, `.html`, `.twig`, `.md`, image formats (`.png`/`.jpg`/`.svg`/…), `.woff`, `.po`, `.mo`.
+
+**Forbidden:** `.phar`, `.sh`, `.exe`, `.so`, `.dll`, `.sql` (migrations must be **PHP**, not raw SQL files).
+
+→ The scaffolder created `scripts/package.sh`. The `.gitattributes` already excludes `/scripts/` from `git archive`, so the zip stays clean.
+
+### Zip envelope
+
+- HTTPS download URL, TLS verified.
+- ≤ 20 MB total.
+- No ZIP-Slip, no `..`, no absolute paths, no drive letters, no control bytes, no symlinks.
+- Locale files individually ≤ 512 KB.
+
+### Localization (no POeditor)
+
+- PHP strings: `dgettext('rgpd-conformite', 'Hello')` — never plain `gettext()` or `_()` (those resolve to the core domain and won't be translated).
+- JS strings: `window.CRM.plugins['rgpd-conformite'].i18n[key]` (or register as i18next namespace via `addResourceBundle`).
+- Missing locale falls back to `en_US.json`.
+
+### Hooks contract
+
+- Subscribe via `HookManager::addAction(Hooks::PERSON_CREATED, ...)` from `boot()`. Don't subscribe in the constructor (loading order).
+- Touching PII via `PERSON_*` / `FAMILY_*` requires `hooks.person` / `hooks.family` in the approved-registry permissions.
+- Touching donations would require `hooks.financial` — **out of scope for v0.1** (we only read donations for DSAR introspection, not subscribe to financial hooks).
+
+### File I/O contract
+
+- All exports (DSAR JSON, register PDF, audit CSV) go via the HTTP response — **no `file_put_contents()` to disk**.
+- Schema migrations write only to plugin-owned tables (`rgpd_*`).
+- This keeps `fs.write` out of the permissions list and the security scan output clean.
+
+### Settings & API surface
+
+- Plugin settings declared in `plugin.json` `settings`. Read with `$this->getConfigValue('key')`. Write via the standard `/plugins/api/plugins/{id}/settings` POST (no custom endpoint needed).
+- `hasTest: true` only if we add a "Test connection" button later (not for v0.1).
+
+### Logging
+
+- Use `LoggerUtils::getAppLogger()`. Never write to log files directly.
+- **Never log PII** — even in audit log rows, store IDs and category labels, not field values.
+
+---
+
+## 9. Risks and open questions
 
 | Risk | Mitigation |
 |---|---|
@@ -261,7 +322,7 @@ rgpd-conformite/
 | Plugin maintainers cannot delete a person to fulfil Art. 17 | Document the limitation; v0.2 introduces a soft-anonymise action that overwrites PII fields with `[anonymised]` placeholders |
 | Schema migration on plugin activation may fail silently | Wrap in a transaction; surface failure in the admin UI |
 
-## 9. References
+## 10. References
 
 - GDPR full text: https://eur-lex.europa.eu/eli/reg/2016/679/oj
 - CNIL — RGPD pour les associations: https://www.cnil.fr/fr/rgpd
