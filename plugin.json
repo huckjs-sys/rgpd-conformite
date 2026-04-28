@@ -1,0 +1,17 @@
+{
+    "id": "rgpd-conformite",
+    "name": "RGPD Compliance",
+    "description": "GDPR / RGPD compliance toolkit for ChurchCRM: data subject access requests, right to erasure, processing register, retention policy.",
+    "version": "0.1.0",
+    "author": "Eoles Conseil",
+    "authorUrl": "https://github.com/huckjs-sys/rgpd-conformite",
+    "type": "community",
+    "minimumCRMVersion": "7.0.0",
+    "mainClass": "ChurchCRM\\Plugins\\RgpdConformite\\RgpdConformitePlugin",
+    "dependencies": [],
+    "settingsUrl": "/plugins/rgpd-conformite/settings",
+    "settings": [],
+    "menuItems": [],
+    "hooks": [],
+    "hasTest": false
+}
