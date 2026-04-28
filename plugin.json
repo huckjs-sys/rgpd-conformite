@@ -9,8 +9,38 @@
     "minimumCRMVersion": "7.0.0",
     "mainClass": "ChurchCRM\\Plugins\\RgpdConformite\\RgpdConformitePlugin",
     "dependencies": [],
-    "settingsUrl": "/plugins/rgpd-conformite/settings",
-    "settings": [],
+    "settings": [
+        {
+            "key": "enabled",
+            "label": "Enable GDPR features",
+            "type": "boolean",
+            "required": false,
+            "help": "Master switch. When off, the plugin is loaded but its UI is hidden and audit logging is paused."
+        },
+        {
+            "key": "dpoName",
+            "label": "DPO full name",
+            "type": "text",
+            "required": true,
+            "help": "Name of the Data Protection Officer signing GDPR requests for the church."
+        },
+        {
+            "key": "dpoEmail",
+            "label": "DPO contact email",
+            "type": "text",
+            "required": true,
+            "help": "Email address data subjects can use to contact the DPO. Appended to every DSAR export."
+        },
+        {
+            "key": "retentionYears",
+            "label": "Retention period after deactivation (years)",
+            "type": "select",
+            "options": ["1", "2", "3", "5", "7", "10"],
+            "optionLabels": ["1 year", "2 years (default)", "3 years", "5 years", "7 years", "10 years"],
+            "required": false,
+            "help": "How long deactivated person records remain visible to administrators before becoming DPO-only. Defaults to 2 years."
+        }
+    ],
     "menuItems": [],
     "hooks": [],
     "hasTest": false
